@@ -32,6 +32,7 @@ def verify_auth_token(token):
     except BadSignature:
         return "Invalid token!"    # invalid token
 
+
 class ListAll(Resource):
     def get(self, dtype=''):
         token = request.args.get('token', type=str)

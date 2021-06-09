@@ -29,38 +29,29 @@
    <!-- Our own stylesheet -->
    <link rel="stylesheet" href="/static/css/calc.css" />
    <body>
-	<h1>Brevet Times Database API Interface</h1>
-	{% if current_user.is_authenticated %}
-      <div class="container">
-         <form role="form" action="/_req">
-            <br />  <!-- a little vertical space -->
-            
-            <div class="row">
-                     <label>Times to retrieve:</label><br />
-                     <input name='check_open' id='check_open' type='checkbox' value='open' /><label for='check_open'>Open times</label><br />
-                     <input name='check_close' id='check_close' type='checkbox' value='close' /><label for='check_close'>Close times</label><br />
-            </div>
-			<div class="row">
-                     <label for='k'>Number of times to retrieve (fill out nothing/0 to see all):</label><br />
-                     <input name='k' id='k' type='number' min='0' step='1'></input><br />
-            </div>
-			<div class="row">
-                     <label for='format'>Data formatting:</label><br />
-                     <select name='format' id='format'>
-                        <option value='json'>Raw JSON</option>
-                        <option value='csv'>Raw CSV</option>
-                     </select>
-            </div>
-			<div class="row">
-                 <button type='submit' name='submit'>Submit</button>
-            </div>
-            </div>
-            <!-- row -->
-         </form>
-      </div>
-	{% else %}
-			<a href="/login" class="btn btn-primary">Login</a><br>
-			<a href="/register" class="btn btn-primary">Register</a><br>
-	{% endif %}
+	<h1>Brevet Times Database API Interface Registration</h1>
+	<div class="row">
+	<form method="post" novalidate>
+		{{ form.hidden_tag() }}
+		<div class="col-4">
+			<div class="form-group">
+				<label class="form-check-label" for="usernameBox">{{ form.username.label }}</label>
+				{{ form.username(size=32, class="form-control", id="usernameBox") }}
+				{{ form.password(size=32, class="form-control", id="passwordBox") }}
+				<!-- <input type="text" class="form-control" placeholder="Username" aria-label="Username" name="username"> -->
+				{% if form.username.errors %}
+				<ul class="errors">
+					{% for error in form.username.errors %}
+					<li>{{ error }}</li>
+					{% endfor %}
+				</ul>
+				{% endif %}
+			</div>
+			<div class="input-group mb-4">
+				<button class="btn btn-outline-primary" id="button-login">Register</button>
+			</div>
+		</div>
+	</form>
+</div>
    </body>
 </html>

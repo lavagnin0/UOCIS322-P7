@@ -1,5 +1,5 @@
 import flask
-from flask import Flask, render_template, Response
+from flask import Flask, session, request, Response, render_template, redirect, url_for, flash, abort
 import requests
 import os
 from urllib.parse import urlparse, urljoin
@@ -9,6 +9,7 @@ from flask_login import (LoginManager, current_user, login_required,
                          confirm_login, fresh_login_required)
 from flask_wtf import FlaskForm as Form
 from wtforms import BooleanField, StringField, validators
+import json
 
 
 app = Flask(__name__)
@@ -58,30 +59,36 @@ class RegisterForm(Form):
 
 
 class User(UserMixin):
-    def __init__(self, id, username, token):
-        self.id = id
+    def __init__(self, username, token):
         self.username = username
         self.token = token
 
 
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+
+
 @login_manager.user_loader
 def load_user(user_id):
-    app.logger.debug("LOAD USER: " + str(session['id']) + " " + session['username'] + session['token'])
     username = session['username']
-    if username == None:
+    if username is None:
         return None
-    user = User(int(user_id), username, flask.session.get('token'))
+    user = User(username, flask.session.get('token'))
     return user
 
 
 @app.route('/')
 @app.route('/index')
+@login_required
 def index():
     return render_template('index.html')
 
 
 @app.route('/_req')
 def req():
+    token = session.get("token")
     format = flask.request.args.get('format', default='json', type=str)
     k = flask.request.args.get('k', default=0, type=int)
     open = flask.request.args.get('check_open', default='', type=str)
@@ -92,7 +99,7 @@ def req():
         option = 'listOpenOnly'
     else:
         option = 'listCloseOnly'
-    url = API_URL + '/' + option + '/' + format + '?top=' + str(k)
+    url = API_URL + '/' + option + '/' + format + '?top=' + str(k) + "&" + token
     r = requests.get(url)
     return r.text
 
@@ -108,7 +115,12 @@ def register():
         return Response('Username or password missing', 400)
     hashed = pwd_context.encrypt(password)
     resp = requests.post('{}/register'.format(API_URL), {'username': username, 'password': hashed})
-    return Response(response_data.text, response_data.status_code)
+    if r.status_code == 200:
+        flash("Registration complete")
+    else:
+        flash("Registration failure")
+        flash(json.loads(r.text))
+    return render_template("register.html", form=form)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -116,9 +128,17 @@ def login():
     form = LoginForm()
     if form.validate_on_submit() and request.method == "POST" and "username" in request.form:
         username = request.form["username"]
-        if username in USER_NAMES:
-            remember = request.form.get("remember", "false") == "true"
-            if login_user(USER_NAMES[username], remember=remember):
+        password = request.form["password"]
+        remember = request.form.get("remember", "false") == "true"
+        hashed = pwd_context.encrypt(password)
+        resp = requests.get('{}/token'.format(API_URL), {'username': username, 'password': hashed})
+        if resp.status_code == 200:
+            user_data = json.loads(resp.text)
+            token = user_data.get('token')
+            user = User(username, token)
+            if login_user(user, remember=remember):
+                session['username'] = username
+                session['token'] = token
                 flash("Logged in!")
                 flash("I'll remember you") if remember else None
                 next = request.args.get("next")
@@ -128,7 +148,8 @@ def login():
             else:
                 flash("Sorry, but you could not log in.")
         else:
-            flash(u"Invalid username.")
+            flash(u"Invalid username or password.")
+            flash(resp.text)
     return render_template("login.html", form=form)
 
 

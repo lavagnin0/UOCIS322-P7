@@ -112,8 +112,7 @@ def register():
       password = request.form['password']
       if username is None or password is None:
         return Response('Username or password missing', 400)
-      hashed = pwd_context.encrypt(password)
-      resp = requests.post('{}/register'.format(API_URL), {'username': username, 'password': hashed})
+      resp = requests.post(API_URL + '/register', params={'username': username, 'password': password})
       if resp.status_code == 200:
         flash("Registration complete")
       else:
@@ -128,8 +127,7 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
         remember = request.form.get("remember", "false") == "true"
-        hashed = pwd_context.encrypt(password)
-        resp = requests.get('{}/token'.format(API_URL), {'username': username, 'password': hashed})
+        resp = requests.get(API_URL + '/token', params={'username': username, 'password': password})
         if resp.status_code == 200:
             user_data = json.loads(resp.text)
             token = user_data.get('token')

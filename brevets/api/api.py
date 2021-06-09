@@ -7,6 +7,7 @@ import flask
 from itsdangerous import (TimedJSONWebSignatureSerializer \
                               as Serializer, BadSignature, \
                           SignatureExpired)
+from passlib.apps import custom_app_context as pwd_context
 
 app = Flask(__name__)
 api = Api(app)
@@ -87,8 +88,8 @@ class Register(Resource):
             return Response('No username or password provided', 400)
         if authdb.authdb.find_one({'username': username}) is not None:
             return Response('Username already taken', 400)
-
-        authdb.authdb.insert_one({'username': username, 'password': password})
+        hashed = pwd_context.encrypt(password)
+        authdb.authdb.insert_one({'username': username, 'password': hashed})
 
         return Response('Successfully registered user {}'.format(username), 201)
 
@@ -103,9 +104,9 @@ class Token(Resource):
         user = authdb.authdb.find_one({'username': username})
         if user is None:
             return Response('Username invalid', 401)
-        if user.get('password') != password:
+        hashed = user.get('password') 
+        if not pwd_context.verify(password, hashed):
             return Response('Password invalid', 401)
-
         s = Serializer(SECRET_KEY, expires_in=600)
         token = s.dumps(user.get('_id'))
 

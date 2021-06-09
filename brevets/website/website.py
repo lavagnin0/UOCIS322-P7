@@ -104,22 +104,20 @@ def req():
     return r.text
 
 
-@app.route('/register', methods=['POST'])
+@app.route('/register', methods=["GET", "POST"])
 def register():
     form = RegisterForm()
-    if not form.validate_on_submit():
-        return Response('Form not validated', 400)
-    username = request.form['username']
-    password = request.form['password']
-    if username is None or password is None:
+    if form.validate_on_submit() and request.method == "POST":
+      username = request.form['username']
+      password = request.form['password']
+      if username is None or password is None:
         return Response('Username or password missing', 400)
-    hashed = pwd_context.encrypt(password)
-    resp = requests.post('{}/register'.format(API_URL), {'username': username, 'password': hashed})
-    if r.status_code == 200:
+      hashed = pwd_context.encrypt(password)
+      resp = requests.post('{}/register'.format(API_URL), {'username': username, 'password': hashed})
+      if resp.status_code == 200:
         flash("Registration complete")
-    else:
+      else:
         flash("Registration failure")
-        flash(json.loads(r.text))
     return render_template("register.html", form=form)
 
 
@@ -149,11 +147,10 @@ def login():
                 flash("Sorry, but you could not log in.")
         else:
             flash(u"Invalid username or password.")
-            flash(resp.text)
     return render_template("login.html", form=form)
 
 
-@app.route("/logout")
+@app.route("/logout", methods=["GET", "POST"])
 @login_required
 def logout():
     logout_user()

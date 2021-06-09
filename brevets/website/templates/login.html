@@ -31,6 +31,17 @@
    <body>
 	<h1>Brevet Times Database API Interface Login</h1>
 	<div class="row">
+		<div class="container">
+			{% with messages = get_flashed_messages() %}
+			{% if messages %}
+			{% for message in messages %}
+			<div class="alert alert-primary" role="alert">
+				{{ message }}
+			</div>
+			{% endfor %}
+			{% endif %}
+			{% endwith %}
+		</div>
 	<form method="post" novalidate>
 		{{ form.hidden_tag() }}
 		<div class="col-4">

@@ -114,6 +114,7 @@ def register():
       resp = requests.post(API_URL + '/register', params={'username': username, 'password': password})
       if resp.status_code == 201:
         flash("Registration complete")
+        return redirect(url_for('index'))
       else:
         flash("Registration failure")
     return render_template("register.html", form=form)

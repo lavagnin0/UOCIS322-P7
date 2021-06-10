@@ -23,11 +23,8 @@ SECRET_KEY = 'test1234@#$'
 def verify_auth_token(token):
     s = Serializer(SECRET_KEY)
     try:
-        data = s.loads(token.decode('utf-8', 'replace'))
-        if authdb.authdb.find(data) is not None:
-            return "Success"
-        else:
-            raise BadSignature
+        data = s.loads(token)
+        return "Success"
     except SignatureExpired:
         return "Expired token!"    # valid token, but expired
     except BadSignature:
@@ -110,7 +107,7 @@ class Token(Resource):
         s = Serializer(SECRET_KEY, expires_in=600)
         token = s.dumps({id: user.get('id')})
 
-        return flask.jsonify({'token': token.decode('utf-8', 'replace'), 'duration': 600}), 200
+        return make_response(flask.jsonify({'token': str(token)[2:-1], 'duration': 600}), 200)
 
 
 api.add_resource(ListAll, '/listAll', '/listAll/<string:dtype>')

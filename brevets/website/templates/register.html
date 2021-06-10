@@ -47,8 +47,9 @@
 		<div class="col-4">
 			<div class="form-group">
 				<label class="form-check-label" for="usernameBox">{{ form.username.label }}</label>
-				{{ form.username(size=32, class="form-control", id="usernameBox") }}
-				{{ form.password(size=32, class="form-control", id="passwordBox") }}
+				{{ form.username(size=50, class="form-control", id="usernameBox") }}
+				<label class="form-check-label" for="usernameBox">{{ form.password.label }}</label>
+				{{ form.password(size=50, class="form-control", id="passwordBox") }}
 				<!-- <input type="text" class="form-control" placeholder="Username" aria-label="Username" name="username"> -->
 				{% if form.username.errors %}
 				<ul class="errors">

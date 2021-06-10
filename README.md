@@ -1,100 +1,34 @@
-# UOCIS322 - Project 7 #
-Adding authentication and user interface to brevet time calculator service
+# UOCIS322 - Project 6 #
+Online brevet time calculator webapp, database, api, and api interface with login and (not very fancy but usable) UX.
+Author: Jeremy Lavagnino, jlavagni@uoregon.edu
+## Overview
 
-## What is in this repository
+Reimplementation of the RUSA ACP controle time calculator with Flask and AJAX.
 
-You have a minimal implementation of password- and token-based authentication modules in `DockerAuth` directory, and login forms in `DockerLogin`, using which you can create authenticated REST API-based services (as demonstrated in class), as well as a front end. 
+## About ACP controle times
 
-## IMPORTANT NOTES
+That's *"controle"* with an *e*, because it's French, although "control" is also accepted. Controls are points where a rider must obtain proof of passage, and control[e] times are the minimum and maximum times by which the rider must arrive at the location.
 
-**MAKE SURE TO USE THE SOLUTION `acp_times.py` from Canvas for this project!**
+The algorithm for calculating controle times is described here [https://rusa.org/pages/acp-brevet-control-times-calculator](https://rusa.org/pages/acp-brevet-control-times-calculator). Additional background information is given here [https://rusa.org/pages/rulesForRiders](https://rusa.org/pages/rulesForRiders). Some of the specifications are somewhat ambiguous, so the current RUSA ACP control time calculator ([https://rusa.org/octime_acp.html](https://rusa.org/octime_acp.html)) has been used to clarify them. Specifically, the table with minimum/maximum speeds has the boundary distances (such as 200 km) in multiple rows, making unclear which one to use. I determined that the first row the value appears in is always used (so for 200 km, that would mean a max speed of 34 km/h instead of 32), which is what my program uses. Additionally, I determined through experimentation with the online calculator that it rounds up to the nearest minute from 30+ seconds and down from 29 seconds and below, which is how I implemented the rounding behaviour in this program. Also, the algorithm now takes into account the set close times for brevets available at https://en.m.wikipedia.org/wiki/Randonneuring.
 
-**MAKE SURE TO KEEP YOUR FILES in `brevets`! REMOVE `DockerRestAPI` after you're done!**
+## Usage
+Use docker-compose in the brevets directory to run and build the images for the sites, api, and database. To use the main website, simply input the distances from the start of the controle locations in either of the first two columns depending on whether you prefer to use miles or kilometers, and the start/close time columns will be calcualted and automatically filled in. Note that all distances are converted to km for backend calculations.
 
-## Getting started 
+## Saving times to the database
 
-You will reuse *your* code from Project 6.
+You can save one set of time calculations at a time to the database for seperate viewing by pressing the "Submit" button. Pressing "Submit" will save the distance in kilometers, open time, and close time of all the controles currently in the form, and will overwrite any previously-saved values. If there are multiple controls at the same distance in the form, only one of them will be saved in the database. Pressing "Display" will open a seperate page displaying all of the most-recently submitted control information. If no times have been submitted, "Display" will only display an error message on the main page.
 
-Recall: you created the following three parts: 
+## Database API
 
-* You designed RESTful services to expose what is stored in MongoDB, and created the following:
+A RESTful service to expose the times stored in the database is also included at port 5495. There are three basic services: listAll to list both open and close times, listOpenOnly for just open times, and listCloseOnly for only close times. After those, you can also specify the format by adding csv or json, though the default is json if format is not specify. The query parameter top can be used to get just the top k times in ascending order. Note that a k value of zero is the default and will list all times. So, an example api call to get the top 5 open times in CSV format would be: 
+"http://<host>:5495/listOpenOnly/csv?top=5". Also note that though the controle distances are also stored in the database, there is no way to retrieve them using the API.
+**The API now requires a valid token to access. Register using the API Interface Website and login, then use the data retrieval tool which will automatically fill in a valid token in order to use the API**
+   
+## API Interface Website
 
-** "http://<host:port>/listAll" should return all open and close times in the database
+A website is also provided in order to make retrieving data using the API a little more user-friendly. A valid login is required to access the data retrieval page, otherwise a page with "Login" and "Register" buttons will be displayed. First, click "Register" and fill in a username that has not been used yet and a password of your choice. If succesful, you will be directed back to the page with "Login" and "Register" buttons. Now you can press "Login", and if you login using the correct credentials, you will be redirected to the data retrieval page. The various options can be selected or entered on a webpage (format, number to display, whether to display only open, only close, or both) and then pressing submit will automatically form the API request and return the appropriate data in the appropriate format, although not very fancy-looking because I got lazy. Once you are done, use the Logout button at the bottom of the page to logout. Otherwise, the tokens will timeout automatically after 10 minutes.
 
-** "http://<host:port>/listOpenOnly" should return open times only
 
-** "http://<host:port>/listCloseOnly" should return close times only
+## Credits
 
-* You also designed two different representations: one in csv and one in json. For the above, JSON should be your default representation. 
-
-** "http://<host:port>/listAll/csv" should return all open and close times in CSV format
-
-** "http://<host:port>/listOpenOnly/csv" should return open times only in CSV format
-
-** "http://<host:port>/listCloseOnly/csv" should return close times only in CSV format
-
-** "http://<host:port>/listAll/json" should return all open and close times in JSON format
-
-** "http://<host:port>/listOpenOnly/json" should return open times only in JSON format
-
-** "http://<host:port>/listCloseOnly/json" should return close times only in JSON format
-
-* You also added a query parameter to get top "k" open and close times. For examples, see below.
-
-** "http://<host:port>/listOpenOnly/csv?top=3" should return top 3 open times only (in ascending order) in CSV format 
-
-** "http://<host:port>/listOpenOnly/json?top=5" should return top 5 open times only (in ascending order) in JSON format
-
-* You'll also designed consumer programs (e.g., in jQuery) to expose the services.
-
-### Functionality you will add
-
-In this project, you will add the following functionalities:
-
-#### Part 1: Authenticating the services 
-
-- POST **/register**
-
-Registers a new user. On success a status code 201 is returned. The body of the response contains a JSON object with the newly added user. On failure status code 400 (bad request) is returned. Note: The password is hashed before it is stored in the database. Once hashed, the original password is discarded. Your database should have three fields: id (unique index), username and password for storing the credentials.
-
-- GET **/token**
-
-Returns a token. This request must be authenticated using a HTTP Basic Authentication (see `DockerAuth/password.py` and `DockerAuth/testToken.py`). On success a JSON object is returned with a field `token` set to the authentication token for the user and a field `duration` set to the (approximate) number of seconds the token is valid. On failure status code 401 (unauthorized) is returned.
-
-- GET **/RESOURCE-YOU-CREATED-IN-PROJECT-6**
-
-Return a protected <resource>, which is basically what you created in project 6. This request must be authenticated using token-based authentication only (see `DockerAuth/testToken.py`). HTTP password-based (basic) authentication is not allowed. On success a JSON object with data for the authenticated user is returned. On failure status code 401 (unauthorized) is returned.
-
-#### Part 2: User interface
-
-The goal of this part of the project is to create frontend/UI for Brevet app using Flask-WTF and Flask-Login introduced in lectures. You frontend/UI should use the authentication that you created above. In addition to creating UI for basic authentication and token generation, you will add three additional functionalities in your UI: a) registration, b) login, c) remember me, d) logout.
-
-#### Summary
-You will still maintain your `brevetsapp` service, and `mongodb` service that you've had since project 5, that will remain UNCHANGED.
-
-## Tasks
-
-You'll turn in your credentials.ini using which we will get the following:
-
-* The working application with two parts.
-
-* Dockerfile
-
-* docker-compose.yml
-
-## Grading Rubric
-
-* If your code works as expected: 100 points. This includes:
-    * Basic APIs work as expected in part 1.
-    * Decent user interface in part 2 including the three functionalities in the UI.
-
-* For each non-working API in part 1, 15 points will be docked off. Part 1 carries 45 points.
-
-* For the UI and the three functionalies, decent UI carries 15 points. Each functionality carries 10 points. In short, part 2 carries 45 points.
-
-* If none of them work, you'll get 10 points assuming
-    * `README` is updated with your name and email ID.
-    * `credentials.ini` is submitted with the correct URL of your repo.
-    * `docker-compose.yml` works/builds without any errors.
-
-* If the `docker-compose.yml` doesn't build or if `credentials.ini` is missing, 0 will be assigned.
+Michal Young, Ram Durairajan, Steven Walton, Joe Istas.

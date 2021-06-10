@@ -61,7 +61,7 @@ class RegisterForm(Form):
 class User(UserMixin):
     def __init__(self, username, token):
         self.username = username
-        self.token = token
+        self.id = token
 
 
 def is_safe_url(target):

@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, Response
+from flask import Flask, request, render_template, Response, make_response
 from flask_restful import Resource, Api
 import pymongo
 from pymongo import MongoClient

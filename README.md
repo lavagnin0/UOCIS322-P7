@@ -1,4 +1,4 @@
-# UOCIS322 - Project 6 #
+# UOCIS322 - Project 7 #
 Online brevet time calculator webapp, database, api, and api interface with login and (not very fancy but usable) UX.
 Author: Jeremy Lavagnino, jlavagni@uoregon.edu
 ## Overview

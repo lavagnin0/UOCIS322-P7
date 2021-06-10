@@ -23,7 +23,7 @@ SECRET_KEY = 'test1234@#$'
 def verify_auth_token(token):
     s = Serializer(SECRET_KEY)
     try:
-        data = s.loads(token)
+        data = s.loads(token.decode('utf-8', 'replace'))
         if authdb.authdb.find(data) is not None:
             return "Success"
         else:
@@ -89,7 +89,7 @@ class Register(Resource):
         if authdb.authdb.find_one({'username': username}) is not None:
             return Response('Username already taken', 400)
         hashed = pwd_context.encrypt(password)
-        authdb.authdb.insert_one({'username': username, 'password': hashed})
+        authdb.authdb.insert_one({'id': authdb.authdb.count_documents({}) + 1, username': username, 'password': hashed})
 
         return Response('Successfully registered user {}'.format(username), 201)
 
@@ -108,9 +108,9 @@ class Token(Resource):
         if not pwd_context.verify(password, hashed):
             return Response('Password invalid', 401)
         s = Serializer(SECRET_KEY, expires_in=600)
-        token = s.dumps(user.get('_id'))
+        token = s.dumps({id: user.get('id')})
 
-        return flask.jsonify({'token': token.decode('utf-8'), 'duration': 600}), 200
+        return flask.jsonify({'token': token.decode('utf-8', 'replace'), 'duration': 600}), 200
 
 
 api.add_resource(ListAll, '/listAll', '/listAll/<string:dtype>')

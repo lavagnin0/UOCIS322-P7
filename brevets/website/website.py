@@ -98,7 +98,7 @@ def req():
         option = 'listOpenOnly'
     else:
         option = 'listCloseOnly'
-    url = API_URL + '/' + option + '/' + format + '?top=' + str(k) + "&" + token
+    url = API_URL + '/' + option + '/' + format + '?top=' + str(k) + "&token=" + token
     r = requests.get(url)
     return r.text
 

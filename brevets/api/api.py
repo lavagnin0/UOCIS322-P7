@@ -105,7 +105,7 @@ class Token(Resource):
         if not pwd_context.verify(password, hashed):
             return Response('Password invalid', 401)
         s = Serializer(SECRET_KEY, expires_in=600)
-        token = s.dumps({id: user.get('id')})
+        token = s.dumps({'id': user.get('id')})
 
         return make_response(flask.jsonify({'token': str(token)[2:-1], 'duration': 600}), 200)
 

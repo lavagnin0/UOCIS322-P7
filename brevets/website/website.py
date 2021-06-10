@@ -113,7 +113,7 @@ def register():
       if username is None or password is None:
         return Response('Username or password missing', 400)
       resp = requests.post(API_URL + '/register', params={'username': username, 'password': password})
-      if resp.status_code == 200:
+      if resp.status_code == 201:
         flash("Registration complete")
       else:
         flash("Registration failure")

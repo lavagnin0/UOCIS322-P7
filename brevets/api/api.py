@@ -89,7 +89,7 @@ class Register(Resource):
         if authdb.authdb.find_one({'username': username}) is not None:
             return Response('Username already taken', 400)
         hashed = pwd_context.encrypt(password)
-        authdb.authdb.insert_one({'id': authdb.authdb.count_documents({}) + 1, username': username, 'password': hashed})
+        authdb.authdb.insert_one({'id': authdb.authdb.count_documents({}) + 1, 'username': username, 'password': hashed})
 
         return Response('Successfully registered user {}'.format(username), 201)
 
